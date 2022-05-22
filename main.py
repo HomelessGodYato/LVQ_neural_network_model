@@ -7,10 +7,6 @@ from random import randrange
 from math import sqrt
 
 
-
-
-
-
 df = pd.read_csv('D:/desktop/Programming/Python/AI_ML/Neural networks/University Project/LVQ_NN/german_credit_data.csv')
 # plt.figure(figsize=(15,9))
 # sns.heatmap(df.corr(), cmap='Blues', annot=True)
