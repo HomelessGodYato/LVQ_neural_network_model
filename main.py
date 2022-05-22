@@ -1,13 +1,16 @@
-import math
 import numpy as np
+
 import pandas as pd
-from sklearn.model_selection import train_test_split
+from pandas.plotting import scatter_matrix
 
-def main():
-    credit_data = pd.read_csv('D:/desktop/Programming/Python/AI_ML/Neural networks/University Project/LVQ_NN/german_credit_data.csv')
-    _class = credit_data['kredit']
-    del credit_data['Id']
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 
-if __name__ == '__main__':
-    main()
+df = pd.read_csv('D:/desktop/Programming/Python/AI_ML/Neural networks/University Project/LVQ_NN/german_credit_data.csv')
+# plt.figure(figsize=(15,9))
+# sns.heatmap(df.corr(), cmap='Blues', annot=True)
+# plt.show()
+corr_matrix = df.corr()
+
+print(corr_matrix['kredit'].sort_values(ascending=False))
