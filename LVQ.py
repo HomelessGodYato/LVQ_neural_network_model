@@ -15,6 +15,4 @@ class LVQ:
         return data
 
 
-nn = LVQ()
-data = nn.load_data('../LVQ_NN/german_credit_data.csv')
-print(data)
+
