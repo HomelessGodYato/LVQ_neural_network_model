@@ -86,15 +86,15 @@ def main_algorithm(labels_mapping,
 def experiments():
     print("Raw data")
     print("---------------------------------------------------------")
-    # labels_mapping, dataset = data.load_data_normalization(
-    #     'D:/desktop/Programming/Python/AI_ML/Neural networks/University Project/LVQ_NN/credit.csv')
+    labels_mapping, dataset = data.load_data_normalization(
+        'D:/desktop/Programming/Python/AI_ML/Neural networks/University Project/LVQ_NN/german_credit_data.csv')
+    main_algorithm(labels_mapping, dataset, 10, 0.01, 5)
+
+    # print("Prepared_data")
+    # print("---------------------------------------------------------")
+    # labels_mapping, dataset = data.load_data(
+    #     'D:/desktop/Programming/Python/AI_ML/Neural networks/University Project/LVQ_NN/sorted_credit.csv')
     # main_algorithm(labels_mapping, dataset, 100, 0.01, 5)
-    #
-    print("Prepared_data")
-    print("---------------------------------------------------------")
-    labels_mapping, dataset = data.load_data(
-        'D:/desktop/Programming/Python/AI_ML/Neural networks/University Project/LVQ_NN/sorted_credit.csv')
-    main_algorithm(labels_mapping, dataset, 100, 0.01, 5)
     #
     # print("Prepared_data_without_normalization")
     # print("---------------------------------------------------------")

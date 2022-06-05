@@ -157,7 +157,7 @@ def cross_validate(
         learning_rate: float, learning_rate_decay: Union[str, None], epochs: int,
         # Codebook params
         codebook_size: int, features_count: int,
-        labels_count: int, codebook_init_method: str = "random",
+        labels_count: int, codebook_init_method: str = "sample",
         codebook_init_dataset: List[float] = None, model: LVQ = None):
     """Cross-validation."""
     # rozdzielenie zbioru na podzbiory
