@@ -32,8 +32,11 @@ class LVQ:
         self.labels_count = labels_count
 
         assert codebook_init_method in (
-            "random",
-        ), "Currently supported codebook initialization methods are: zeros, sample, random"
+            "sample",
+        )
+        """
+        Sprawdzenie czy istnieje zbior dancyh i czy jest wystarczająco duży
+        """
         if codebook_init_method == "sample":
             assert (
                     codebook_init_dataset is not None
@@ -42,60 +45,40 @@ class LVQ:
                     len(codebook_init_dataset) >= codebook_size
             ), "Not enough samples in the dataset"
 
-        if codebook_init_method == "zeros":
-            self._init_codebook_zeros()
-        elif codebook_init_method == "sample":
+        if codebook_init_method == "sample":
             self._init_codebook_sample(codebook_init_dataset)
-        elif codebook_init_method == "random":
-            self._init_codebook_random()
 
-    def _init_codebook_zeros(self) -> None:
-        """Initialize codebook with zeros for all the features.
-
-        Tries to take the same amout of samples for each label.
-        """
-        self.codebook = [
-            [0] * self.features_count + [i % self.labels_count]
-            for i in range(self.codebook_size)
-        ]
 
     def _init_codebook_sample(self, dataset: List[List[float]]) -> None:
-        """Initialize codebook based on sample dataset.
+        """Incjalizuje codebook bazując losowym przykładzie ze zbioru danych.
 
-        Takes some samples from the dataset to initialize the codebook.
-        Tries to take the same amout of samples for each label.
+        Pobiera kilka egzemplarów wektorów ze zbioru danych dla inicjalizacji codebook`a.
+        Stara się pobrać równą liczbę przykładów dla każdej klasy.
         """
-        label_split = {label: [] for label in range(self.labels_count)}
+        label_split = {label: [] for label in range(self.labels_count)} # rozdzielienie na podzibiory klas
         for vector in dataset:
             label_split[vector[-1]].append(vector)
 
         self.codebook = []
         idx = 0
+        #przypisanie danych do codebook`a
         while len(self.codebook) < self.codebook_size:
             if len(label_split[idx]) > 0:
                 self.codebook.append(label_split[idx].pop().copy())
             idx = (idx + 1) % self.labels_count
 
-    def _init_codebook_random(self) -> None:
-        """Initialize the codebook with random values bewteen 0 and 1.
 
-        Tries to take the same amout of samples for each label.
-        """
-        self.codebook = [
-            [uniform(0, 1) for _ in range(self.features_count)]
-            + [i % self.labels_count]
-            for i in range(self.codebook_size)
-        ]
 
     @staticmethod
     def vector_euclidean_distance(a: List[float], b: List[float]) -> float:
-        """Calculate Euclidean distance for all the features (ignore label)."""
+        """Obliczenie odległości Euclidesowej"""
 
         *features_a, _ = a
         *features_b, _ = b
         return sum([(v - x) ** 2 for v, x in zip(features_a, features_b)]) ** 0.5
 
     def get_best_matching_vector(self, input_vector: List[float]) -> List[float]:
+        """Zwraca najbardziej podobny codebook do podanego wektora."""
         distances = []
         for vector in self.codebook:
             distances.append(self.vector_euclidean_distance(vector, input_vector))
@@ -103,23 +86,27 @@ class LVQ:
         closest_vector = self.codebook[distances.index(min(distances))]
         return closest_vector
 
+
     def predict(self, input_features: List[float]) -> int:
+        """Zwraca klasę dla podanego wektora na podstawie BMU."""
         return self.get_best_matching_vector(input_features + [None])[-1]
+
 
     def update(
             self, train_vector: List[float], learning_rate: float
     ) -> Tuple[float, float]:
-        best_vector = self.get_best_matching_vector(train_vector)
-        error = 0.0
+        """Aktualizuje wektor kodujący. Oblicza wagę dla codebook`a."""
+        best_vector = self.get_best_matching_vector(train_vector) # inicjalizacja BMU
+        error = 0.0 # inicjalizacja błędu
         for idx in range(self.features_count):
-            error = train_vector[idx] - best_vector[idx]
+            error = train_vector[idx] - best_vector[idx] # obliczenie błędu
 
-            if train_vector[-1] == best_vector[-1]:
-                best_vector[idx] += learning_rate * error
+            if train_vector[-1] == best_vector[-1]: # sprawdzenie czy klasa jest taka sama
+                best_vector[idx] += learning_rate * error #przesuwanie wektora kodującego/ obliczenie wag
             else:
                 best_vector[idx] -= learning_rate * error
 
-        return best_vector[-1], error ** 2
+        return best_vector[-1], error ** 2 # zwracanie klasy i błędu
 
     def train_codebook(
             self,
@@ -127,12 +114,11 @@ class LVQ:
             epochs: int,
             base_learning_rate: float,
             learning_rate_decay: Union[str, None] = "linear", ) -> List[float]:
-
+        """Uczenie codebook`a."""
         assert learning_rate_decay in [
             None,
             "linear",
-        ], "Unsupported learning rate decay"
-
+        ]
         progress = tqdm(
             range(epochs),
             unit="epochs",
@@ -140,23 +126,28 @@ class LVQ:
             bar_format="Training: {percentage:3.0f}% |{bar}| {n_fmt}/{total_fmt}{postfix}",
         )
 
-        learning_rate = base_learning_rate
-        y = [0]
+        learning_rate = base_learning_rate # inicjalizacja współczynnika uczenia na początku
+        y = [0] # inicjalizacja dokładności
         for epoch in progress:
             accuracy = 0
             if learning_rate_decay == "linear":
+                # obliczenie współczynnika uczenia dla każdej epoki
                 learning_rate = self.linear_decay(base_learning_rate, epoch, epochs)
             for train_vector in train_vectors:
+                # aktualizacja wektora kodującego dla każdego wektora z zbioru uczącego
                 prediction, square_error = self.update(train_vector, learning_rate)
-                if prediction == train_vector[-1]:
+                if prediction == train_vector[-1]: # sprawdzenie czy klasa jest taka sama
                     accuracy += 1
-            accuracy /= len(train_vectors)
+            accuracy /= len(train_vectors) # obliczenie dokładności
             y.append(accuracy)
         y = [i * 100 for i in y]
         return y
 
+
+
     @staticmethod
     def linear_decay(base_rate: float, current_epoch: int, total_epochs: int) -> float:
+        # obliczenie współczynnika uczenia dla każdej epoki
         return base_rate * (1.0 - (current_epoch / total_epochs))
 
 
@@ -168,31 +159,33 @@ def cross_validate(
         codebook_size: int, features_count: int,
         labels_count: int, codebook_init_method: str = "random",
         codebook_init_dataset: List[float] = None, model: LVQ = None):
+    """Cross-validation."""
+    # rozdzielenie zbioru na podzbiory
     dataset_copy = dataset.copy()
 
     shuffle(dataset_copy)
-
+    # obliczenie rozmiaru podzbioru
     fold_size = len(dataset) // fold_count
     folds = [
         dataset_copy[idx: idx + fold_size] for idx in range(0, len(dataset), fold_size)
     ]
 
-    scores = []
-    accuracy_list = []
+    scores = [] # inicjalizacja tablicy dokładności
     iter = len(folds)
     i = 0
-    folds_dict = {f'Fold {i}': '' for i in range(iter)}
+    folds_dict = {f'Fold {i+0}': '' for i in range(iter)}
     cf_list = dict.fromkeys(folds_dict.keys())
     print(folds_dict)
 
     for test_vectors in folds:
+        #
         label_list = []
         predictions_list = []
         print(f'Fold {len(scores) + 1}')
         train_vectors = folds.copy()
         train_vectors.remove(test_vectors)
         train_vectors = [item for fold in train_vectors for item in fold]
-        correct = 0
+        correct = 0 #liczba poprawnych przewidzianych klas
         for vector in test_vectors:
             *features, label = vector
             label_list.append(label)
@@ -202,16 +195,20 @@ def cross_validate(
             print(f'Predicted {prediction}: Expected {label}')
             if prediction == label:
                 correct += 1
-        cf_list[f'Fold {i}'] = confusion_matrix(y_true=label_list, y_pred=predictions_list)
+        cf_list[f'Fold {i}'] = confusion_matrix(y_true=label_list, y_pred=predictions_list) #utworzenie confusion matrix
         i += 1
         scores.append(correct / len(test_vectors))
 
     scores = [i * 100 for i in scores]
 
-    return scores, cf_list, iter, accuracy_list
+    return scores, cf_list, iter
 
 
 def make_plots(**kwargs):
+    """Tworzenie wykresów.
+    Przyjmuje wiele parametrów na podstawie których tworzone są wykresy.
+    """
+
     iter = kwargs['iter']
     epochs = kwargs['epochs']
     if 'scores' in kwargs:

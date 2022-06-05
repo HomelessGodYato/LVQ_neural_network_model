@@ -4,34 +4,52 @@ import data
 import lvq_test
 from lvq_test import cross_validate, make_plots
 
-
+# funkcja wypisująca wektory
 def pprint_vector(vector):
     vector = [str(round(value, 3)) for value in vector]
     if len(vector) > 6:
         vector = [*vector[:3], "...", *vector[-3:]]
     print("[" + ", ".join([f"{value:>7}" for value in vector]) + "]")
 
-
-def main_algorithm(labels_mapping, dataset, epochs, learning_rate, folds):
+#funkcja wykonująca wszystkie działanie potrzebny do eksperymentow
+def main_algorithm(labels_mapping,
+                   dataset,
+                   epochs,
+                   learning_rate,
+                   folds):
+    """
+       @labels_mapping: klasy ze zbioru danych
+       @dataset: dane wejściowe
+       @epochs: liczba epok
+       @learning_rate: współczynnik uczenia
+       @folds: liczba podziałów
+    """
+    # wypisanie klas zbioru danych
     print("Label mapping:")
     print(labels_mapping)
 
+    # losowo wybrany wektor z danych wejściowych
     sample = random.choice(dataset)
+    # obliczanie długości wektora i jego klasy
     *features, label = sample
-
     features_count = len(features)
     labels_count = len(labels_mapping)
+
+    # liczba codebooków
     codebook_size = 30
+    # inicjalizacja sieci neuronowej LVQ
+    model = lvq_test.LVQ(codebook_size,
+                         features_count,
+                         labels_count,
+                         "sample",
+                         dataset)
 
-    model = lvq_test.LVQ(codebook_size, features_count, labels_count, "sample", dataset)
-    print("Random sample:")
-    pprint_vector(sample)
-
-    print("Prediction:", model.predict(features))
+    # wypisanie codebooków po inicjalizacji
     print("Initialized codebook:")
     for vector in model.codebook:
         pprint_vector(vector)
 
+    # nauczanie codebooków (sieci LVQ)
     print("Training model...")
     accuracy = model.train_codebook(
         train_vectors=dataset,
@@ -39,14 +57,14 @@ def main_algorithm(labels_mapping, dataset, epochs, learning_rate, folds):
         learning_rate_decay=None,
         epochs=epochs,
     )
-
-    print("Prediction:", model.predict(features))
+    # wypisanie nauczonych codebooków
     print("Trained codebook:")
     for vector in model.codebook:
         pprint_vector(vector)
 
+    # incjalizacja cross-walidacji
     print("Cross validating model...")
-    scores, confusion_matrixes, iter, accuracy_list = cross_validate(
+    scores, confusion_matrixes, iter= cross_validate(
         dataset,
         folds,
         learning_rate=0.01,
@@ -58,8 +76,11 @@ def main_algorithm(labels_mapping, dataset, epochs, learning_rate, folds):
         codebook_init_method="sample",
         model=model
     )
-    make_plots(scores=scores, confusion_matrixes=confusion_matrixes, iter=iter, epochs=epochs, accuracy=accuracy,
-               accuracy_list=accuracy_list)
+    # rysowanie wykresów
+    make_plots(scores=scores,
+               confusion_matrixes=confusion_matrixes,
+               iter=iter, epochs=epochs,
+               accuracy=accuracy)
 
 
 def experiments():
@@ -71,7 +92,7 @@ def experiments():
     #
     print("Prepared_data")
     print("---------------------------------------------------------")
-    labels_mapping, dataset = data.load_data_normalization(
+    labels_mapping, dataset = data.load_data(
         'D:/desktop/Programming/Python/AI_ML/Neural networks/University Project/LVQ_NN/sorted_credit.csv')
     main_algorithm(labels_mapping, dataset, 100, 0.01, 5)
     #
