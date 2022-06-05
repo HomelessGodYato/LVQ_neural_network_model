@@ -9,19 +9,22 @@ from tqdm import tqdm
 
 
 class LVQ:
-    """LVQ algorithm implementation.
+    """Implementacja algorytmu LVQ.
 
-    Allows to create, train and use a codebook. Codebook is a list of vectors.
-    Vector is a list of weights/features and a label.
+    Pozwala stwarzać, nauczać i używać wektorów kodujących (Codebook). Codebook jest listą wektorów.
+    Wektor jest listą wag/atrybutów i klas.
     """
 
+    """
+    Konstruktor klasy LVQ
+    """
     def __init__(
             self,
-            codebook_size: int,
-            features_count: int,
-            labels_count: int,
-            codebook_init_method: str = "zeros",
-            codebook_init_dataset: List[float] = None,
+            codebook_size: int, # liczba wektorów kodujących
+            features_count: int, # liczba atrybutów
+            labels_count: int, # liczba klas
+            codebook_init_method: str = "random", # metoda inicjalizacji codebook`a
+            codebook_init_dataset: List[float] = None, # dane do inicjalizacji codebook`a
     ):
 
         self.codebook_size = codebook_size
@@ -29,8 +32,6 @@ class LVQ:
         self.labels_count = labels_count
 
         assert codebook_init_method in (
-            "zeros",
-            "sample",
             "random",
         ), "Currently supported codebook initialization methods are: zeros, sample, random"
         if codebook_init_method == "sample":
@@ -109,7 +110,7 @@ class LVQ:
             self, train_vector: List[float], learning_rate: float
     ) -> Tuple[float, float]:
         best_vector = self.get_best_matching_vector(train_vector)
-
+        error = 0.0
         for idx in range(self.features_count):
             error = train_vector[idx] - best_vector[idx]
 
@@ -118,14 +119,14 @@ class LVQ:
             else:
                 best_vector[idx] -= learning_rate * error
 
-        return (best_vector[-1], error ** 2)
+        return best_vector[-1], error ** 2
 
     def train_codebook(
             self,
             train_vectors: List[List[float]],
             epochs: int,
             base_learning_rate: float,
-            learning_rate_decay: Union[str, None] = "linear", ) -> None:
+            learning_rate_decay: Union[str, None] = "linear", ) -> List[float]:
 
         assert learning_rate_decay in [
             None,
@@ -161,18 +162,12 @@ class LVQ:
 
 def cross_validate(
         # Validation params
-        dataset: List[List[float]],
-        fold_count: int,
-        learning_rate: float,
-        learning_rate_decay: Union[str, None],
-        epochs: int,
+        dataset: List[List[float]], fold_count: int,
+        learning_rate: float, learning_rate_decay: Union[str, None], epochs: int,
         # Codebook params
-        codebook_size: int,
-        features_count: int,
-        labels_count: int,
-        codebook_init_method: str = "zeros",
-        codebook_init_dataset: List[float] = None,
-) -> List[float]:
+        codebook_size: int, features_count: int,
+        labels_count: int, codebook_init_method: str = "random",
+        codebook_init_dataset: List[float] = None, model: LVQ = None):
     dataset_copy = dataset.copy()
 
     shuffle(dataset_copy)
@@ -189,6 +184,7 @@ def cross_validate(
     folds_dict = {f'Fold {i}': '' for i in range(iter)}
     cf_list = dict.fromkeys(folds_dict.keys())
     print(folds_dict)
+
     for test_vectors in folds:
         label_list = []
         predictions_list = []
@@ -196,22 +192,6 @@ def cross_validate(
         train_vectors = folds.copy()
         train_vectors.remove(test_vectors)
         train_vectors = [item for fold in train_vectors for item in fold]
-
-        model = LVQ(
-            codebook_size=codebook_size,
-            features_count=features_count,
-            labels_count=labels_count,
-            codebook_init_method=codebook_init_method,
-            codebook_init_dataset=codebook_init_dataset,
-        )
-        accuracy = model.train_codebook(
-            train_vectors=train_vectors,
-            base_learning_rate=learning_rate,
-            learning_rate_decay=learning_rate_decay,
-            epochs=epochs,
-        )
-        accuracy_list.append(accuracy)
-
         correct = 0
         for vector in test_vectors:
             *features, label = vector
@@ -253,27 +233,24 @@ def make_plots(**kwargs):
         fig.supxlabel('Actual')
         fig.supylabel('Predicted')
         folds_dict = {f'Fold {i}': '' for i in range(iter)}
+        size = len(confusion_matrixes)
         for i, ax in enumerate(axes.flat):
             k = list(confusion_matrixes)[i]
             sns.heatmap(confusion_matrixes[k] / np.sum(confusion_matrixes[k]), ax=ax, annot=True, fmt='.2%',
-                        cbar=i == 4)
+                        cbar=True)
             ax.set_title(k, fontsize=8)
 
     if 'accuracy' in kwargs:
         accuracy = kwargs['accuracy']
-        accuracy_list = kwargs['accuracy_list']
-        x = [i for i in range(epochs+1)]
+        x = [i for i in range(epochs + 1)]
         y = accuracy
         plt.figure()
-        plt.plot(x,y)
+        plt.plot(x, y)
         plt.xlabel('Epochs')
         plt.ylabel('Accuracy %')
         plt.ylim(0, 100)
         plt.xlim(0, epochs)
-        plt.xticks(x[::epochs//10])
+        plt.xticks(x[::epochs // 10])
         plt.yticks(np.arange(0, 101, 5))
         plt.grid()
-        for i in range(len(accuracy_list)):
-            plt.plot(x, accuracy_list[i])
-        plt.legend(['Acccuracy for training', 'Fold 1', 'Fold 2'])
     plt.show()
