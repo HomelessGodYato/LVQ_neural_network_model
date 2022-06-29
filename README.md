@@ -8,5 +8,4 @@ For plots used seaborn and matplotlib packages.
 # How to use
 1. Downlodd this repository. (git clone or just download archive)
 2. Set up your virtual environment.
-3. Use ```python
-        pip install -r requirements.txt``` in terminal.
+3. Use ```pip install -r requirements.txt``` in terminal.
