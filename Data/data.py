@@ -4,28 +4,25 @@ from typing import List
 import pandas as pd
 
 
-# wczytywanie danych bez normalizacji
-def load_data(filename):
-    dataset = pd.read_csv(filename, header=None)
-    dataset = dataset.values
-    labels = dataset[:, -1]
-    mapping = set(labels)
-    return mapping, dataset
-
-
-# wczytywanie danych  i normalizacja
+# reading data
 def load_data_normalization(filename):
+    # making pandas dataframe
     dataset = pd.read_csv(filename, header=None)
+
+    # taking values from dataset
     dataset = dataset.values
+
+    # taking labels from dataset
     labels = dataset[:, -1]
     mapping = set(labels)
 
+    # normalizing data
     normalized = normalize(dataset)
     normalized = random.sample(normalized, len(normalized))
-    return mapping, normalized
+    return mapping, normalized  # returning normalized data and labels
 
 
-# funkcja normalizacji
+# normalization
 def normalize(dataset: List[List[float]]) -> List[List[float]]:
     feature_count = len(dataset[0]) - 1
 
