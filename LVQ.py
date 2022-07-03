@@ -129,9 +129,9 @@ class LVQ:
         return y, accuracy * 100  # returning data for making plots in future
 
     @staticmethod
-    # TODO: implement more learning rate decay methods (discrete, exponential, etc.)
     def linear_decay(base_rate: float, current_epoch: int, total_epochs: int) -> float:
         return base_rate * (1.0 - (current_epoch / total_epochs))
+    # TODO: implement more learning rate decay methods (discrete, exponential, etc.)
 
 
 def cross_validate(
