@@ -49,7 +49,7 @@ class LVQ:
         self.codebook = []
         idx = 0
         # assigning data to codebooks
-        while len(self.codebook) < self.codebook_size:
+        while len(self.codebook) < self.codebooks_count:
             if len(label_split[idx]) > 0:
                 self.codebook.append(label_split[idx].pop().copy())
             idx = (idx + 1) % self.labels_count
@@ -201,7 +201,7 @@ def make_plots(**kwargs):
     if 'scores' in kwargs:
         scores = kwargs['scores']
         fig = plt.figure(figsize=(12, 12))
-        plt.title('Wyniki cross-walidacji w postaci histogramu.')
+        plt.title('Cross-validation results (bar plot).')
         bars = sns.barplot(x=[i + 1 for i in range(len(scores))], y=scores)
         for bar in bars.patches:
             bars.annotate(f'{round(bar.get_height(), 2)}%',
@@ -212,17 +212,17 @@ def make_plots(**kwargs):
         plt.xlabel('Fold')
         plt.ylabel('Accuracy %')
 
-    if 'confusion_matrixes' in kwargs:
-        confusion_matrixes = kwargs['confusion_matrixes']
+    if 'confusion_matrices' in kwargs:
+        confusion_matrices = kwargs['confusion_matrices']
         fig, axes = plt.subplots(nrows=1, ncols=iter, figsize=(20, 4))
         fig.supxlabel('Actual')
         fig.supylabel('Predicted')
-        fig.suptitle('Wyniki cross-walidacji w postaci confusion matrix.', fontsize=16)
+        fig.suptitle('Cross-validation results (confusion matrices).', fontsize=16)
         folds_dict = {f'Fold {i}': '' for i in range(iter)}
-        size = len(confusion_matrixes)
+        size = len(confusion_matrices)
         for i, ax in enumerate(axes.flat):
-            k = list(confusion_matrixes)[i]
-            sns.heatmap(confusion_matrixes[k] / np.sum(confusion_matrixes[k]), ax=ax, annot=True, fmt='.2%',
+            k = list(confusion_matrices)[i]
+            sns.heatmap(confusion_matrices[k] / np.sum(confusion_matrices[k]), ax=ax, annot=True, fmt='.2%',
                         cbar=True)
             ax.set_title(k, fontsize=8)
 
@@ -232,7 +232,7 @@ def make_plots(**kwargs):
         y = accuracy
         plt.figure()
         plt.plot(x, y)
-        plt.title('Wykres dokładności uczenia sieci.')
+        plt.title('Neural network accuracy plot.')
         plt.xlabel('Epochs')
         plt.ylabel('Accuracy %')
         plt.ylim(0, 100)
@@ -247,7 +247,7 @@ def make_plots(**kwargs):
         y = kwargs['results1']
         plt.figure(figsize=(12, 20))
         plt.plot(x, y)
-        plt.title('Wplyw współczynnika uczenia na dokładność')
+        plt.title('Learning rate impact on network accuracy')
         plt.xlabel('Learning rate')
         plt.ylabel('Accuracy %')
         plt.ylim(min(y) - 10, 100)
@@ -261,7 +261,7 @@ def make_plots(**kwargs):
         y = kwargs['results2']
         plt.figure(figsize=(12, 20))
         plt.plot(x, y)
-        plt.title('Wpływ liczby epok na dokładność')
+        plt.title('Epochs number impact on network accuracy')
         plt.xlabel('Epochs')
         plt.ylabel('Accuracy %')
         plt.ylim(min(y) - 5, max(y) + 5)
@@ -269,13 +269,13 @@ def make_plots(**kwargs):
         plt.xticks(x)
         plt.grid(axis='y')
 
-    if 'codebooks_counts' in kwargs:
+    if 'codebooks_count' in kwargs:
         codebooks_count = kwargs['codebooks_count']
         x = codebooks_count
         y = kwargs['results3']
         plt.figure(figsize=(12, 20))
         plt.plot(x, y)
-        plt.title('Wpływ ilości wektorów kodujących na dokładność')
+        plt.title('Codebooks number impact on network accuracy')
         plt.xlabel('Codebook size')
         plt.ylabel('Accuracy %')
         plt.ylim(min(y) - 5, max(y) + 5)
@@ -290,7 +290,7 @@ def make_plots(**kwargs):
         y = best_accuracy
         plt.figure()
         plt.plot(x, y)
-        plt.title('Wykres dokładności uczenia sieci dla najlepszych parametrów.')
+        plt.title('Accuracy with the best parameters.')
         plt.xlabel('Epochs')
         plt.ylabel('Accuracy %')
         plt.ylim(0, 100)

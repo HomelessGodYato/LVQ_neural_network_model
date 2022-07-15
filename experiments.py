@@ -1,12 +1,13 @@
 import random
 
-import data
-import LVQ
+from Data import data
+import LVQ as nn
 from LVQ import make_plots
 
 """
 This script implements some experiments to test LVQ model
 """
+
 
 # printing vectors
 def pprint_vector(vector):
@@ -23,7 +24,6 @@ def main_algorithm(labels_mapping,
                    learning_rate,
                    codebooks_count,
                    folds):
-
     # printing all unique output classes
     print("Label mapping:")
     print(labels_mapping)
@@ -40,18 +40,18 @@ def main_algorithm(labels_mapping,
     codebooks_count = codebooks_count
 
     # LVQ neural network initialization
-    model = lvq_test.LVQ(codebooks_count,
-                         features_count,
-                         labels_count,
-                         "sample",
-                         dataset)
+    model = nn.LVQ(codebooks_count,
+                   features_count,
+                   labels_count,
+                   "sample",
+                   dataset)
 
     # assigned codebook vectors (initial values)
     print("Initialized codebook:")
     for vector in model.codebook:
         pprint_vector(vector)
 
-    # LVQ model trainig
+    # LVQ model training
     print("Training model...")
     print("Innitial model:")
     accuracy_list, accuracy = model.train_codebook(
@@ -61,20 +61,18 @@ def main_algorithm(labels_mapping,
         epochs=epochs,
     )
 
-    # wypisanie nauczonych codebooków
     print("Trained codebook:")
     for vector in model.codebook:
         pprint_vector(vector)
 
-    # incjalizacja cross-walidacji
     print("Cross validating model...")
-    scores, confusion_matrixes, iter = lvq_test.cross_validate(
+    scores, confusion_matrices, iter = nn.cross_validate(
         dataset,
         folds,
         learning_rate=0.01,
         learning_rate_decay=None,
         epochs=epochs,
-        codebooks_count=codebooks_count,
+        codebook_size=codebooks_count,
         features_count=features_count,
         labels_count=labels_count,
         codebook_init_method="sample",
@@ -82,7 +80,7 @@ def main_algorithm(labels_mapping,
     )
     # EXPERIMENT 1: how learning rate affects model accuracy
 
-    # model1 = lvq_test.LVQ(codebooks_count,
+    # model1 = nn.LVQ(codebooks_count,
     #                       features_count,
     #                       labels_count,
     #                       "sample",
@@ -113,7 +111,7 @@ def main_algorithm(labels_mapping,
 
     # EXPERIMENT 2: how number of epochs affects model accuracy
     # print("Epochs experiment:")
-    # model2 = lvq_test.LVQ(codebooks_count,
+    # model2 = nn.LVQ(codebooks_count,
     #                       features_count,
     #                       labels_count,
     #                       "sample",
@@ -139,7 +137,6 @@ def main_algorithm(labels_mapping,
     # best = [key for key, val in parameters_epochs.items() if val == max_accuracy]
     # best_epoch = best[0]
 
-
     # EXPERIMENT 3: how number of codebook vectors affects model accuracy
     # print("Codebook size experiment:")
     # codebooks_sizes = [1, 5, 10, 20, 30,
@@ -149,7 +146,7 @@ def main_algorithm(labels_mapping,
     # parameters_codebooks_count = {}
     #
     # for i in codebooks_sizes:
-    #     model3 = lvq_test.LVQ(i,
+    #     model3 = nn.LVQ(i,
     #                           features_count,
     #                           labels_count,
     #                           "sample",
@@ -168,7 +165,7 @@ def main_algorithm(labels_mapping,
 
     # EXPERIMENT 4: trainig LVQ model with the best parameters that are found in previous experiments
     # print("Best parameters experiment:")
-    # model3 = lvq_test.LVQ(best_codebooks_count,
+    # model3 = nn.LVQ(best_codebooks_count,
     #                       features_count,
     #                       labels_count,
     #                       "sample",
@@ -177,20 +174,20 @@ def main_algorithm(labels_mapping,
     #                                                           base_learning_rate=best_lr,
     #                                                           learning_rate_decay='linear',
     #                                                           epochs=best_epoch, )
-    #epoch = 250
-    #learning_rate = 0.01
-    #learning_rate = 0.13
-
+    # epoch = 250
+    # learning_rate = 0.01
+    # learning_rate = 0.13
 
     # give parameters you need and this function will make plots for you
     make_plots(epochs=epochs,
                iter=iter,
                scores=scores,
-               confusion_matrixes=confusion_matrixes,
+               confusion_matrixes=confusion_matrices,
                accuracy=accuracy_list
                )
 
     return accuracy, accuracy_list
+
 
 # function that starts experiment
 def experiments():
@@ -198,7 +195,7 @@ def experiments():
     print("---------------------------------------------------------")
     # use path for your dataset
     labels_mapping, dataset = data.load_data_normalization(
-        'D:/desktop/Programming/Python/AI_ML/Neural networks/University Project/LVQ_NN/german_credit_data.csv')
+        'Data/german_credit_data.csv')
     main_algorithm(labels_mapping, dataset, 100, 0.01, 30, 5)
 
 
